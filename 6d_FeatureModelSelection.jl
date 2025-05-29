@@ -541,22 +541,22 @@ CSV.write(savePath, optiSearch_df)
 # ==================================================================================================
 ## define a function for Gradient Boost ##
 function optimGradientBoostClass(inputDB_ingested, inputDB_FNA, inputDB_di, inputDB_PMdi, inputDB_OldDi)
-    lr_r = vcat(0.1, 0.5, 1, 5)  # 4
+    lr_r = vcat(0.5, 1, 1.5)  # 3
     #lr_r = vcat(0.5, collect(1:2:9))  # 6
     #lr_r = vcat(collect(2:0.5:9))  # 15
     #lr_r = vcat(collect(3.5:0.1:4.5))  # 11
-    leaf_r = vcat(2, 8, 18)  # 3
+    leaf_r = vcat(2, 6, 10)  # 3
     #leaf_r = vcat(collect(2:4:10))  # 3
     #leaf_r = vcat(collect(2:1:8))  # 7
-    depth_r = vcat(collect(4:2:10))  # 4
+    depth_r = vcat(collect(4:1:6))  # 3
     #depth_r = vcat(collect(4:1:8))  # 5
     #depth_r = vcat(collect(5:1:10))  # 6
-    split_r = vcat(collect(2:4:10))  # 3
+    split_r = vcat(collect(10:10:30))  # 3
     #split_r = vcat(collect(10:10:20))  # 2
     #split_r = vcat(collect(15:15:30))  # 2
     #split_r = vcat(30)  # 1
     #split_r = vcat(10, 30, 50)  # 3
-    tree_r = vcat(25, 50)  # 2
+    tree_r = vcat(35)  # 2
     #tree_r = vcat(collect(50:100:250))  # 3
     #tree_r = vcat(collect(25:25:75))  # 3
     #tree_r = vcat(50)  # 1
@@ -566,6 +566,7 @@ function optimGradientBoostClass(inputDB_ingested, inputDB_FNA, inputDB_di, inpu
     itr = 1
 
     M_train = inputDB_ingested
+    N_train = vcat(inputDB_ingested, inputDB_ingested[inputDB_ingested.type .== 2, :])
     M_val = inputDB_FNA
     M_test = inputDB_di
     M_test2 = inputDB_PMdi
@@ -579,20 +580,22 @@ function optimGradientBoostClass(inputDB_ingested, inputDB_FNA, inputDB_di, inpu
                         println("itr=", itr, ", lr=", lr, ", leaf=", l, ", depth=", d, ", minSsplit=", s, ", tree=", t)
                         println("## loading in data ##")
                         Xx_train = deepcopy(M_train[:, 2:end-1])
+                        nn_train = deepcopy(N_train[:, 2:end-1])
                         Xx_val = deepcopy(M_val[:, 2:end-1])
                         Xx_test = deepcopy(M_test[:, 2:end-1])
                         Xx_test2 = deepcopy(M_test2[:, 2:end-1])
                         Xx_ext = deepcopy(M_ext[:, 2:end-1])
                         #
                         Yy_train = deepcopy(M_train[:, end])
+                        mm_train = deepcopy(N_train[:, end])
                         Yy_val = deepcopy(M_val[:, end])
                         Yy_test = deepcopy(M_test[:, end])
                         Yy_test2 = deepcopy(M_test2[:, end])
                         Yy_ext = deepcopy(M_ext[:, end])
                         println("## Classification ##")
-                        reg = GradientBoostingClassifier(learning_rate=lr, n_estimators=t, max_depth=d, min_samples_leaf=l, min_samples_split=s, random_state=rs, n_iter_no_change=5, sample_weight=Dict(0=>0.7579, 1=>0.8684, 2=>1.8906))
+                        reg = GradientBoostingClassifier(learning_rate=lr, n_estimators=t, max_depth=d, min_samples_leaf=l, min_samples_split=s, random_state=rs, n_iter_no_change=5)
                         println("## fit ##")
-                        fit!(reg, Matrix(Xx_train), Vector(Yy_train))
+                        fit!(reg, Matrix(nn_train), Vector(mm_train))
                         importances = permutation_importance(reg, Matrix(Xx_test), Vector(Yy_test), n_repeats=10, random_state=42, n_jobs=-1)
                         print(importances["importances_mean"])
                         if itr == 1
@@ -602,11 +605,11 @@ function optimGradientBoostClass(inputDB_ingested, inputDB_FNA, inputDB_di, inpu
                             z[1,4] = d
                             z[1,5] = s
                             z[1,6] = f1_score(Vector(Yy_train), predict(reg, Matrix(Xx_train)), average="weighted", sample_weight=sampleIngestedW)
-                            z[1,7] = matthews_corrcoef(Vector(Yy_train), predict(reg, Matrix(Xx_train)), sample_weight=sampsampleIngestedWleW)
+                            z[1,7] = matthews_corrcoef(Vector(Yy_train), predict(reg, Matrix(Xx_train)), sample_weight=sampleIngestedW)
                             z[1,8] = f1_score(Vector(Yy_val), predict(reg, Matrix(Xx_val)), average="weighted", sample_weight=sampleFNAW)
                             z[1,9] = matthews_corrcoef(Vector(Yy_val), predict(reg, Matrix(Xx_val)), sample_weight=sampleFNAW)
                             println("## CV ##")
-                            f1_5_train = cross_val_score(reg, Matrix(Xx_train), Vector(Yy_train); cv = 5, scoring=f1)
+                            f1_5_train = cross_val_score(reg, Matrix(nn_train), Vector(mm_train); cv = 5, scoring=f1)
                             z[1,10] = avgScore(f1_5_train, 5)
                             z[1,11] = f1_score(Vector(Yy_test), predict(reg, Matrix(Xx_test)), average="weighted", sample_weight=sampleDiW)
                             z[1,12] = matthews_corrcoef(Vector(Yy_test), predict(reg, Matrix(Xx_test)), sample_weight=sampleDiW)
@@ -652,13 +655,13 @@ function optimGradientBoostClass(inputDB_ingested, inputDB_FNA, inputDB_di, inpu
                             ival = f1_score(Vector(Yy_val), predict(reg, Matrix(Xx_val)), average="weighted", sample_weight=sampleFNAW)
                             jval = matthews_corrcoef(Vector(Yy_val), predict(reg, Matrix(Xx_val)), sample_weight=sampleFNAW)
                             println("## CV ##")
-                            f1_5_train = cross_val_score(reg, Matrix(Xx_train), Vector(Yy_train); cv = 5, scoring=f1)
+                            f1_5_train = cross_val_score(reg, Matrix(nn_train), Vector(mm_train); cv = 5, scoring=f1)
                             traincvtrain = avgScore(f1_5_train, 5) 
                             f1s = f1_score(Vector(Yy_test), predict(reg, Matrix(Xx_test)), average="weighted", sample_weight=sampleDiW)
-                            mccs = matthews_corrcoef(Vector(Yy_test), predict(reg, Matrix(Xx_test)), sample_weight=Xx_test)
+                            mccs = matthews_corrcoef(Vector(Yy_test), predict(reg, Matrix(Xx_test)), sample_weight=sampleDiW)
                             rec = recall_score(Vector(Yy_test), predict(reg, Matrix(Xx_test)), average="weighted", sample_weight=sampleDiW)
                             f1s2 = f1_score(Vector(Yy_test2), predict(reg, Matrix(Xx_test2)), average="weighted", sample_weight=samplePMDiW)
-                            mccs2 = matthews_corrcoef(Vector(Yy_test2), predict(reg, Matrix(Xx_test2)), sample_weight=sampleDiW)
+                            mccs2 = matthews_corrcoef(Vector(Yy_test2), predict(reg, Matrix(Xx_test2)), sample_weight=samplePMDiW)
                             rec2 = recall_score(Vector(Yy_test2), predict(reg, Matrix(Xx_test2)), average="weighted", sample_weight=samplePMDiW)
                             f1s3 = f1_score(Vector(Yy_ext), predict(reg, Matrix(Xx_ext)), average="weighted", sample_weight=sample3031OldDiW)
                             mccs3 = matthews_corrcoef(Vector(Yy_ext), predict(reg, Matrix(Xx_ext)), sample_weight=sample3031OldDiW)
@@ -717,13 +720,15 @@ CSV.write(savePath, optiSearch_df)
 # ==================================================================================================
 ## define a function for k-Nearest Neighbors ##
 function optimKNN(inputDB_ingested, inputDB_FNA, inputDB_di, inputDB_PMdi, inputDB_OldDi)
-    k_n_r = vcat(collect(10:10:50), collect(75:25:175), collect(199:50:399))  # 5+5+5=15
+    k_n_r = vcat(10, 50, 75, 175, 200, 399)  # 6
+    #k_n_r = vcat(collect(10:10:50), collect(75:25:175), collect(199:50:399))  # 5+5+5=15
     #k_n_r = vcat(collect(377:2:399))  # 11
     #k_n_r = vcat(collect(377:2:399))  # 11
     #k_n_r = vcat(collect(377:2:399))  # 11
     #k_n_r = vcat(collect(377:2:399))  # 11
     #k_n_r = vcat(collect(377:2:399))  # 11
-    leaf_r = vcat(2, 5, 10, 25, collect(50:50:400))  # 12
+    leaf_r = vcat(2, 5, 10, 25, 50, 100, 200, 400)  # 8
+    #leaf_r = vcat(2, 5, 10, 25, collect(50:50:400))  # 12
     w_r = ["uniform", "distance"]
     met_r = ["minkowski", "euclidean", "manhattan"]
     p_r = vcat(1, 2)
@@ -737,7 +742,7 @@ function optimKNN(inputDB_ingested, inputDB_FNA, inputDB_di, inputDB_PMdi, input
     itr = 1
 
     M_train = inputDB_ingested
-    N_train = vcat(inputDB_ingested, inputDB_ingested[inputDB_ingested.LABEL .== 2, :])
+    N_train = vcat(inputDB_ingested, inputDB_ingested[inputDB_ingested.type .== 2, :])
     M_val = inputDB_FNA
     M_test = inputDB_di
     M_test2 = inputDB_PMdi
