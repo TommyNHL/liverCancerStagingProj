@@ -150,7 +150,7 @@ di1011DEFSDf[di1011DEFSDf.type .== 1, :]
 di2021DEFSDf[di2021DEFSDf.type .== 1, :]
 di3031DEFSDf[di3031DEFSDf.type .== 2, :]
     ## calculate weight ##  0: 1231, 2478, 2500, 1: 1233, 2491, 2524
-    ## No risk, 1231+2478+2500 =138676; Risk, 1233+2491 =93601; HCC, 2524
+    ## No risk, 1231+2478+2500 =6209; Risk, 1233+2491 =3724; HCC, 2524
 diDEFSDf = vcat(di1011DEFSDf, di2021DEFSDf, di3031DEFSDf)
 
     Yy_DI = deepcopy(diDEFSDf[:, end])  # 0.6688; 1.1150, 1.6451
@@ -541,22 +541,22 @@ CSV.write(savePath, optiSearch_df)
 # ==================================================================================================
 ## define a function for Gradient Boost ##
 function optimGradientBoostClass(inputDB_ingested, inputDB_FNA, inputDB_di, inputDB_PMdi, inputDB_OldDi)
-    lr_r = vcat(0.5, 1, 1.5)  # 3
-    #lr_r = vcat(0.5, collect(1:2:9))  # 6
+    #lr_r = vcat(4)  # 1
+    lr_r = vcat(collect(5:1:10))  # 6
     #lr_r = vcat(collect(2:0.5:9))  # 15
     #lr_r = vcat(collect(3.5:0.1:4.5))  # 11
-    leaf_r = vcat(2, 6, 10)  # 3
+    leaf_r = vcat(8)  # 1
     #leaf_r = vcat(collect(2:4:10))  # 3
     #leaf_r = vcat(collect(2:1:8))  # 7
-    depth_r = vcat(collect(4:1:6))  # 3
+    depth_r = vcat(collect(4:1:10))  # 7
     #depth_r = vcat(collect(4:1:8))  # 5
     #depth_r = vcat(collect(5:1:10))  # 6
+    #split_r = vcat(30)  # 1
     split_r = vcat(collect(10:10:30))  # 3
-    #split_r = vcat(collect(10:10:20))  # 2
     #split_r = vcat(collect(15:15:30))  # 2
     #split_r = vcat(30)  # 1
     #split_r = vcat(10, 30, 50)  # 3
-    tree_r = vcat(35)  # 2
+    tree_r = vcat(50)  # 1
     #tree_r = vcat(collect(50:100:250))  # 3
     #tree_r = vcat(collect(25:25:75))  # 3
     #tree_r = vcat(50)  # 1
@@ -713,7 +713,7 @@ end
 optiSearch_df = optimGradientBoostClass(ingestedDEFSDf, fnaDEFSDf, diDEFSDf, di1011PMDEFSDf, di3031OldDEFSDf)
 
 ## save ##
-savePath = "C:\\Users\\T1208\\PyLAB\\4_output_FIBproj\\4_3_Output_raMSIn\\modeling\\hyperparameterTuning_modelSelection_GBM1.csv"
+savePath = "C:\\Users\\T1208\\PyLAB\\4_output_FIBproj\\4_3_Output_raMSIn\\modeling\\hyperparameterTuning_modelSelection_GBM2.csv"
 CSV.write(savePath, optiSearch_df)
 
 
