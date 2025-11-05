@@ -1,5 +1,5 @@
 # liverCancerStagingProj
-This GitHub repository shares the scripts used for the work titled "Digital Liver Modeling and Multi-Omics Reveal Mitochondrial and Lipid Metabolic Dysregulation in PM2.5-Induced Liver Fibrosis".
+This GitHub repository shares the scripts used for the work titled "Hepatotoxicity Prediction and Multi-Omics Reveal Mitochondrial and Lipid Metabolic Dysregulation in PM2.5-Induced Liver Fibrosis".
 
 # Submitted: August 2025, doi: 10.26434/chemrxiv-2025-ggmsg
 ## Hiu-Lok Ngan,1 Jialing Zhang,1 Yi Chen,1,2 Yuanyuan Song,1,3 Zenghua Qi,4 Zhu Yang,1,5,* Hong Yan,1,5,* Zongwei Cai1,6,*
