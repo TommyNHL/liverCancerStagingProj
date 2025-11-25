@@ -1,7 +1,7 @@
 # liverCancerStagingProj
 This GitHub repository shares the scripts used for the work titled "Hepatotoxicity Prediction and Multi-Omics Reveal Mitochondrial and Lipid Metabolic Dysregulation in PM2.5-Induced Liver Fibrosis".
 
-# Accepted: October 2025, doi: 10.1021/envhealth.5c00401
+# DOI: 10.1021/envhealth.5c00401
 ## Hiu-Lok Ngan,1 Jialing Zhang,1 Yi Chen,1,2 Yuanyuan Song,1,3 Zenghua Qi,4 Zhu Yang,1,5,* Hong Yan,1,5,* Zongwei Cai1,6,*
 ### 1 State Key Laboratory of Environmental and Biological Analysis, Department of Chemistry, Hong Kong Baptist University, Hong Kong 999077 China
 ### 2 School of Public Health (Shenzhen), Sun Yat-sen University, Shenzhen 518107 China
